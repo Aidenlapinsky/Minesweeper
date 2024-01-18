@@ -1,1 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minesweeper Game</title>
+  <style>
+    /* Add your styling here */
+    #minesweeper-board {
+      display: grid;
+      grid-template-columns: repeat(5, 40px); /* Adjust as needed */
+      gap: 2px;
+    }
 
+    .cell {
+      width: 40px;
+      height: 40px;
+      border: 1px solid #ccc;
+      text-align: center;
+      line-height: 40px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="minesweeper-board"></div>
+
+  <script>
+    const boardSize = 5;
+    const mineCount = 5; // Adjust as needed
+
+    const board = document.getElementById('minesweeper-board');
+    const mines = generateMines();
+
+    // Function to generate random mine positions
+    function generateMines() {
+      const minePositions = new Set();
+
+      while (minePositions.size < mineCount) {
+        const randomRow = Math.floor(Math.random() * boardSize);
+        const randomCol = Math.floor(Math.random() * boardSize);
+        minePositions.add(`${randomRow}-${randomCol}`);
+      }
+
+      return minePositions;
+    }
+
+    // Function to create the game board
+    function createBoard() {
+      for (let i = 0; i < boardSize; i++) {
+        for (let j = 0; j < boardSize; j++) {
+          const cell = document.createElement('div');
+          cell.classList.add('cell');
+          cell.dataset.row = i;
+          cell.dataset.col = j;
+          cell.addEventListener('click', handleCellClick);
+          board.appendChild(cell);
+        }
+      }
+    }
+
+    // Function to handle cell click
+    function handleCellClick(event) {
+      const clickedCell = event.target;
+      const row = parseInt(clickedCell.dataset.row);
+      const col = parseInt(clickedCell.dataset.col);
+
+      if (mines.has(`${row}-${col}`)) {
+        // Handle mine click (you may end the game or handle differently)
+        alert('Game Over! You clicked on a mine.');
+      } else {
+        const mineCount = countAdjacentMines(row, col);
+        revealCell(clickedCell, mineCount);
+      }
+    }
+
+    // Function to count adjacent mines
+    function countAdjacentMines(row, col) {
+      let count = 0;
+      for (let i = row - 1; i <= row + 1; i++) {
+        for (let j = col - 1; j <= col + 1; j++) {
+          if (mines.has(`${i}-${j}`)) {
+            count++;
+          }
+        }
+      }
+      return count;
+    }
+
+    // Function to reveal cell
+    function revealCell(cell, mineCount) {
+      cell.style.backgroundColor = '#ddd';
+      cell.textContent = mineCount > 0 ? mineCount : '';
+    }
+
+    // Initialize the game board
+    createBoard();
+  </script>
+</body>
+</html>
