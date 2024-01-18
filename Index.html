@@ -30,7 +30,8 @@
     const mineCount = 5; // Adjust as needed
 
     const board = document.getElementById('minesweeper-board');
-    const mines = generateMines();
+    let mines = [];
+    let revealedCells = 0;
 
     // Function to generate random mine positions
     function generateMines() {
@@ -42,11 +43,13 @@
         minePositions.add(`${randomRow}-${randomCol}`);
       }
 
-      return minePositions;
+      return Array.from(minePositions);
     }
 
     // Function to create the game board
     function createBoard() {
+      mines = generateMines();
+
       for (let i = 0; i < boardSize; i++) {
         for (let j = 0; j < boardSize; j++) {
           const cell = document.createElement('div');
@@ -65,12 +68,16 @@
       const row = parseInt(clickedCell.dataset.row);
       const col = parseInt(clickedCell.dataset.col);
 
-      if (mines.has(`${row}-${col}`)) {
-        // Handle mine click (you may end the game or handle differently)
-        alert('Game Over! You clicked on a mine.');
+      if (mines.includes(`${row}-${col}`)) {
+        revealMines();
+        endGame(false);
       } else {
         const mineCount = countAdjacentMines(row, col);
         revealCell(clickedCell, mineCount);
+
+        if (++revealedCells === boardSize * boardSize - mineCount) {
+          endGame(true);
+        }
       }
     }
 
@@ -79,7 +86,7 @@
       let count = 0;
       for (let i = row - 1; i <= row + 1; i++) {
         for (let j = col - 1; j <= col + 1; j++) {
-          if (mines.has(`${i}-${j}`)) {
+          if (mines.includes(`${i}-${j}`)) {
             count++;
           }
         }
@@ -89,8 +96,48 @@
 
     // Function to reveal cell
     function revealCell(cell, mineCount) {
+      cell.removeEventListener('click', handleCellClick);
       cell.style.backgroundColor = '#ddd';
       cell.textContent = mineCount > 0 ? mineCount : '';
+
+      if (mineCount === 0) {
+        // If no adjacent mines, reveal neighboring cells
+        const row = parseInt(cell.dataset.row);
+        const col = parseInt(cell.dataset.col);
+
+        for (let i = row - 1; i <= row + 1; i++) {
+          for (let j = col - 1; j <= col + 1; j++) {
+            const neighbor = document.querySelector(`[data-row="${i}"][data-col="${j}"]`);
+            if (neighbor && !neighbor.textContent) {
+              handleCellClick({ target: neighbor });
+            }
+          }
+        }
+      }
+    }
+
+    // Function to reveal all mines
+    function revealMines() {
+      mines.forEach((mine) => {
+        const [row, col] = mine.split('-');
+        const mineCell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        mineCell.style.backgroundColor = '#f00';
+      });
+    }
+
+    // Function to end the game
+    function endGame(win) {
+      if (win) {
+        alert('Congratulations! You won!');
+      } else {
+        alert('Game Over! You clicked on a mine.');
+      }
+
+      // Reset the board for a new game
+      board.innerHTML = '';
+      mines = [];
+      revealedCells = 0;
+      createBoard();
     }
 
     // Initialize the game board
